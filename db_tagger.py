@@ -1,24 +1,39 @@
 from urllib import response
 import boto3
 
-client = boto3.client('rds')
 
 
-def get_db_arn():
-    rds_paginator = client.get_paginator('describe_db_instances')
-    response_iterator = rds_paginator.paginate()
-    #database_arn = []
+def tag_dbs(response_iterator):
+    db_arn = []
     for db in response_iterator:
         db_instances = db['DBInstances']
-        for identifier in db_instances:
-            database_arn = (identifier['DBInstanceArn'])
-            database_tag = (identifier['TagList'])
-            print(database_arn, database_tag)
-            
-get_db_arn()
+        for db_info in db_instances:
+            db_arn.append(db_info['DBInstanceArn'])
+    return(db_arn)
+    
+def add_tags_to_resource(db_arn, client):
+    try:
+        for arn in db_arn:
+            client.add_tags_to_resource(
+        ResourceName = arn,
+        Tags = [
+            {
+                'Key': 'Test',
+                'Value': 'Test'
+            },
+        ])
+        
+        return True 
+    except Exception as e:
+        return(e)
+        
+        
 
-'''
-def id_tagging(database_arn):
-    for each in x:
-        client.list_tags_for_resource()
-        '''
+def main():
+    client = boto3.client('rds')
+    paginator = client.get_paginator('describe_db_instances')
+    response_iterator = paginator.paginate()  
+    var = tag_dbs(response_iterator)
+    results = add_tags_to_resource(var, client)
+    print(results)
+main()
