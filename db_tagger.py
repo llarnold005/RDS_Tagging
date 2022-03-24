@@ -4,30 +4,34 @@ import boto3
 
 
 def tag_dbs(response_iterator):
-    db_arn = []
+    databases = []
     for db in response_iterator:
         db_instances = db['DBInstances']
         for db_info in db_instances:
-            db_arn.append(db_info['DBInstanceArn'])
-    return(db_arn)
-    
-def add_tags_to_resource(db_arn, client):
+            databases.append(
+                {
+    "db_arn": db_info['DBInstanceArn'],
+    "db_name": db_info['DBInstanceIdentifier'],
+})
+    return(databases)
+   
+def add_tags_to_resource(databases, client):
     try:
-        for arn in db_arn:
+        for database in databases:
             client.add_tags_to_resource(
-        ResourceName = arn,
+        ResourceName = database['db_arn'],
         Tags = [
             {
-                'Key': 'Test',
-                'Value': 'Test'
+                'Key': 'Name',
+                'Value': database['db_name']
             },
         ])
-        
-        return True 
+       
+        return True
     except Exception as e:
         return(e)
-        
-        
+       
+       
 
 def main():
     client = boto3.client('rds')
